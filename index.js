@@ -13,7 +13,7 @@ await fastify.register(cors, {
   origin:"*",
   methods:["GET","POST","PUT","DELETE"]
 })
-fastify.register(connect);
+fastify.register(connect); 
 fastify.register(auth);
 fastify.register(todos);
 fastify.register(admin);

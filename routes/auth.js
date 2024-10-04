@@ -13,7 +13,7 @@ export default async function auth(fastify, options){
             return reply.status(401).send({ message: 'Invalid email or password' });
         }
 
-       
+         
         const { password, ...userWithoutPassword } = user;
         return reply.send(userWithoutPassword); 
     } catch (error) {
@@ -81,14 +81,14 @@ export default async function auth(fastify, options){
     const transporter = nodemailer.createTransport({  
         service: 'Gmail',  
         auth: {
-            user: "firassayeb2@gmail.com",
-            pass: "sbdghguypdoyjizl"
+            user: "",
+            pass: ""
         }
     });
 
     
     const mailOptions = {
-        from: 'firassayeb2@gmail.com',
+        from: '',
         to: user.email,
         subject: 'Password Reset Request',
         html

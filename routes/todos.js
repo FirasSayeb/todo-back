@@ -15,24 +15,32 @@ export default async function todos(fastify, options) {
     
         if (!user) return null;
     
-        const ownTasks = user.todos.tasks || [];
         
-        // Ensure sharedWith is an array
         const sharedWith = user.todos.sharedWith || [];
     
-        const sharedTasks = sharedWith.map(sharedUser => {
+        
+        const sharedTasks = await Promise.all(sharedWith.map(async (sharedUser) => {
+            const sharedUserData = await collection.findOne(
+                { email: sharedUser.userEmail },
+                { projection: { "todos": 1 } }
+            );  
+    
             return {
                 userEmail: sharedUser.userEmail,
-                mode: sharedUser.mode,
-                tasks: ownTasks.filter(task => task.sharedWith === sharedUser.userEmail) 
+                mode: sharedUser.mode, 
+                tasks: sharedUserData ? sharedUserData.todos.tasks : []
             };
-        });
+        }));
     
-        return {
+        return {  
             ...user.todos,
-            sharedWith: sharedTasks
+            sharedTasks
         };
-    });
+    }); 
+    
+    
+    
+    
     
     
 
@@ -56,7 +64,7 @@ export default async function todos(fastify, options) {
         if (result.modifiedCount === 1) {
             reply.status(200).send({ message: 'Task added successfully' });
         } else {
-            reply.status(400).send({ message: 'Failed to add task' });
+           // reply.status(400).send({ message: 'Failed to add task' });
         }
     });
     
@@ -91,7 +99,7 @@ export default async function todos(fastify, options) {
         const mjmlTemplate = `
             <mjml>
                 <mj-body>
-                    <mj-section>
+                    <mj-section> 
                         <mj-column>
                             <mj-text>Hi,</mj-text>
                             <mj-text>${shareWith} has shared a todo list with you in ${mode} mode.</mj-text>
@@ -103,8 +111,8 @@ export default async function todos(fastify, options) {
         const transporter = nodemailer.createTransport({  
             service: 'Gmail',  
             auth: {
-                user: "firassayeb2@gmail.com", 
-                pass: "sbdghguypdoyjizl"
+                user: "", 
+                pass: ""
             }
         });
     
@@ -142,7 +150,7 @@ export default async function todos(fastify, options) {
                 reply.send({ message: 'Todo shared successfully, but failed to send email.' });
             }
             reply.send({ message: 'Todo shared successfully' });
-        } else if (!user) {
+        } else if (!user) { 
             reply.status(400).send({ message: 'User not found' });
         } else if (!recipient) {
             reply.status(400).send({ message: 'Recipient not found' });
@@ -161,7 +169,7 @@ export default async function todos(fastify, options) {
             { $pull: { "todos.sharedWith": { userEmail: shareWithEmail } } }
         );
     
-       
+        
         
         if (result.modifiedCount === 0) {
             return reply.status(404).send({ message: 'User not found or already removed.' });
